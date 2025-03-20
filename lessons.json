@@ -1,0 +1,100 @@
+[{
+    "id": 1,
+    "LessonName": "Pottery",
+    "LessonImage": "Pottery.png",
+    "Rating": 4,
+    "Price": 20,
+    "Space": 10,
+    "initialSpace": 10,
+    "Location": "Dubai"
+},
+{
+    "id": 2,
+    "LessonName": "Piano",
+    "LessonImage": "Piano.jpg",
+    "Rating": 5,
+    "Price": 30,
+    "Space": 5,
+    "initialSpace": 5,
+    "Location": "Abu Dhabi"
+},
+{
+    "id": 3,
+    "LessonName": "Cricket",
+    "LessonImage": "Cricket.jpg",
+    "Rating": 3,
+    "Price": 25,
+    "Space": 8,
+    "initialSpace": 8,
+    "Location": "Sharjah"
+},
+{
+    "id": 4,
+    "LessonName": "Swimming",
+    "LessonImage": "Swimming.jpg",
+    "Rating": 4,
+    "Price": 15,
+    "Space": 12,
+    "initialSpace": 12,
+    "Location": "Ajman"
+},
+{
+    "id": 5,
+    "LessonName": "Coding",
+    "LessonImage": "Coding.jpg",
+    "Rating": 5,
+    "Price": 40,
+    "Space": 7,
+    "initialSpace": 7,
+    "Location": "Fujairah"
+},
+{
+    "id": 6,
+    "LessonName": "Yoga",
+    "LessonImage": "Yoga.jpg",
+    "Rating": 4,
+    "Price": 10,
+    "Space": 20,
+    "initialSpace": 20,
+    "Location": "Ras Al Khaimah"
+},
+{
+    "id": 7,
+    "LessonName": "Gardening",
+    "LessonImage": "Gardening.jpg",
+    "Rating": 3,
+    "Price": 18,
+    "Space": 9,
+    "initialSpace": 9,
+    "Location": "Umm Al Quwain"
+},
+{
+    "id": 8,
+    "LessonName": "Karate",
+    "LessonImage": "Karate.jpg",
+    "Rating": 4,
+    "Price": 22,
+    "Space": 6,
+    "initialSpace": 6,
+    "Location": "Dubai"
+},
+{
+    "id": 9,
+    "LessonName": "Painting",
+    "LessonImage": "Painting.jpg",
+    "Rating": 5,
+    "Price": 35,
+    "Space": 15,
+    "initialSpace": 15,
+    "Location": "Abu Dhabi"
+},
+{
+    "id": 10,
+    "LessonName": "Dancing",
+    "LessonImage": "Dance.jpg",
+    "Rating": 4,
+    "Price": 28,
+    "Space": 11,
+    "initialSpace": 11,
+    "Location": "Sharjah"
+}]

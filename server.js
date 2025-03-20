@@ -4,11 +4,10 @@ import { MongoClient, ObjectId } from "mongodb";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// 1. Create the Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 2. Middleware
+// 1. Middleware
 app.use(express.json());
 
 // Manual CORS Middleware
@@ -19,7 +18,6 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -31,40 +29,33 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3. Serve static files (e.g., lesson images) from the "images" folder
+// 2. Serve static files (lesson images) from "images" folder
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-// 4. MongoDB connection setup
+// 3. MongoDB connection
 const uri =
   process.env.MONGODB_URI ||
   "mongodb+srv://abdulla:Abdulla123@cluster0.h8xjc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const client = new MongoClient(uri);
 
-// 5. Declare collections (to be set after connection)
 let lessonsCollection;
 let ordersCollection;
 
-// 6. Main async function to connect to MongoDB and define routes
 async function run() {
   try {
     await client.connect();
     console.log("Connected to MongoDB");
 
-    // Use the exact database name (adjust if needed)
     const database = client.db("After_School");
     lessonsCollection = database.collection("lessons");
     ordersCollection = database.collection("orders");
 
-    // GET /lessons – returns all lessons (maps _id to id for frontend convenience)
+    // GET /lessons – return raw docs (with native _id)
     app.get("/lessons", async (req, res) => {
       try {
-        const rawDocs = await lessonsCollection.find({}).toArray();
-        const lessons = rawDocs.map((doc) => ({
-          ...doc,
-          id: doc._id,
-        }));
+        const lessons = await lessonsCollection.find({}).toArray();
         res.json(lessons);
       } catch (error) {
         console.error("Error fetching lessons:", error);
@@ -76,7 +67,7 @@ async function run() {
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
-        // Validate required order fields and that a non-empty lessons array exists
+        // Validate required fields
         if (
           !order.firstName ||
           !order.lastName ||
@@ -92,12 +83,12 @@ async function run() {
           });
         }
 
-        // For each ordered lesson, validate the lesson exists and that enough slots are available.
+        // Check each ordered lesson
         for (const orderItem of order.lessons) {
           if (!orderItem.id || !orderItem.quantity) {
             return res
               .status(400)
-              .json({ error: "Each order item must include id and quantity" });
+              .json({ error: "Each order item must include id and quantity." });
           }
           const lesson = await lessonsCollection.findOne({
             _id: new ObjectId(orderItem.id),
@@ -105,16 +96,16 @@ async function run() {
           if (!lesson) {
             return res
               .status(404)
-              .json({ error: `Lesson with id ${orderItem.id} not found` });
+              .json({ error: `Lesson with id ${orderItem.id} not found.` });
           }
           if (lesson.Space < orderItem.quantity) {
             return res.status(400).json({
-              error: `Not enough available slots for lesson ${lesson.LessonName}. Available: ${lesson.Space}`,
+              error: `Not enough available slots for lesson "${lesson.LessonName}". Available: ${lesson.Space}`,
             });
           }
         }
 
-        // Update each lesson's available slots by decrementing "Space"
+        // Update each lesson's "Space"
         for (const orderItem of order.lessons) {
           await lessonsCollection.updateOne(
             { _id: new ObjectId(orderItem.id) },
@@ -122,7 +113,7 @@ async function run() {
           );
         }
 
-        // Insert the order into the orders collection
+        // Insert the order
         const result = await ordersCollection.insertOne(order);
         res
           .status(201)
@@ -133,7 +124,7 @@ async function run() {
       }
     });
 
-    // PUT /lessons/:id – updates a lesson document (optional: for admin adjustments)
+    // PUT /lessons/:id – update a lesson (optional for admin)
     app.put("/lessons/:id", async (req, res) => {
       try {
         const lessonId = req.params.id;
@@ -152,7 +143,7 @@ async function run() {
       }
     });
 
-    // 7. Start the server
+    // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });

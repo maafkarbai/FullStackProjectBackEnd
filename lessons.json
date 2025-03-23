@@ -1,6 +1,6 @@
 [{
     "LessonName": "Pottery",
-    "LessonImage": "Pottery.png",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Pottery.png",
     "Rating": 4,
     "Price": 20,
     "Space": 10,
@@ -10,7 +10,7 @@
 {
   
     "LessonName": "Piano",
-    "LessonImage": "Piano.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Piano.jpg",
     "Rating": 5,
     "Price": 30,
     "Space": 5,
@@ -20,7 +20,7 @@
 {
   
     "LessonName": "Cricket",
-    "LessonImage": "Cricket.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Cricket.jpg",
     "Rating": 3,
     "Price": 25,
     "Space": 8,
@@ -30,7 +30,7 @@
 {
   
     "LessonName": "Swimming",
-    "LessonImage": "Swimming.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Swimming.jpg",
     "Rating": 4,
     "Price": 15,
     "Space": 12,
@@ -40,7 +40,7 @@
 {
   
     "LessonName": "Coding",
-    "LessonImage": "Coding.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Coding.jpg",
     "Rating": 5,
     "Price": 40,
     "Space": 7,
@@ -50,7 +50,7 @@
 {
   
     "LessonName": "Yoga",
-    "LessonImage": "Yoga.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Yoga.jpg",
     "Rating": 4,
     "Price": 10,
     "Space": 20,
@@ -59,7 +59,7 @@
 },
 {
   "LessonName": "Gardening",
-    "LessonImage": "Gardening.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Gardening.jpg",
     "Rating": 3,
     "Price": 18,
     "Space": 9,
@@ -69,7 +69,7 @@
 {
   
     "LessonName": "Karate",
-    "LessonImage": "Karate.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Karate.jpg",
     "Rating": 4,
     "Price": 22,
     "Space": 6,
@@ -79,7 +79,7 @@
 {
   
     "LessonName": "Painting",
-    "LessonImage": "Painting.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Painting.jpg",
     "Rating": 5,
     "Price": 35,
     "Space": 15,
@@ -89,7 +89,7 @@
 {
   
     "LessonName": "Dancing",
-    "LessonImage": "Dance.jpg",
+    "LessonImage": "https://fullstackprojectbackend-tt3a.onrender.com/images/Dance.jpg",
     "Rating": 4,
     "Price": 28,
     "Space": 11,

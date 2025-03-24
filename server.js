@@ -145,18 +145,40 @@ async function run() {
 
     // GET /search - Full text search on LessonName, Location, Price, Space
     app.get("/search", async (req, res) => {
-      const query = req.query.q || "";
-      try {
-        const regex = new RegExp(query, "i"); // case-insensitive
+      const query = (req.query.q || "").trim();
 
-        // Perform search in multiple fields
+      try {
+        // Return all lessons if search query is empty
+        if (!query) {
+          const lessons = await lessonsCollection.find({}).toArray();
+          return res.json(lessons);
+        }
+
+        const regex = new RegExp(query, "i"); // case-insensitive regex
+
         const results = await lessonsCollection
           .find({
             $or: [
               { LessonName: regex },
               { Location: regex },
-              { Price: { $regex: regex } }, // Match numeric values as string
-              { Space: { $regex: regex } }, // Same for availability
+              {
+                $expr: {
+                  $regexMatch: {
+                    input: { $toString: "$Price" },
+                    regex: query,
+                    options: "i",
+                  },
+                },
+              },
+              {
+                $expr: {
+                  $regexMatch: {
+                    input: { $toString: "$Space" },
+                    regex: query,
+                    options: "i",
+                  },
+                },
+              },
             ],
           })
           .toArray();

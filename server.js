@@ -143,6 +143,31 @@ async function run() {
       }
     });
 
+    // GET /search - Full text search on LessonName, Location, Price, Space
+    app.get("/search", async (req, res) => {
+      const query = req.query.q || "";
+      try {
+        const regex = new RegExp(query, "i"); // case-insensitive
+
+        // Perform search in multiple fields
+        const results = await lessonsCollection
+          .find({
+            $or: [
+              { LessonName: regex },
+              { Location: regex },
+              { Price: { $regex: regex } }, // Match numeric values as string
+              { Space: { $regex: regex } }, // Same for availability
+            ],
+          })
+          .toArray();
+
+        res.json(results);
+      } catch (err) {
+        console.error("Search error:", err);
+        res.status(500).json({ error: "Search failed." });
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);

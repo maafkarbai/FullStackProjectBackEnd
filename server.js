@@ -67,7 +67,6 @@ async function run() {
       try {
         const order = req.body;
 
-        // ✅ Validate required fields
         if (
           !order.firstName ||
           !order.lastName ||
@@ -79,7 +78,6 @@ async function run() {
           return res.status(400).json({ error: "Missing required fields." });
         }
 
-        // ✅ Field format validation
         const nameRegex = /^[A-Za-z]+$/;
         const phoneRegex = /^[0-9]{7,15}$/;
         const zipRegex = /^\d{5}$/;
@@ -105,7 +103,6 @@ async function run() {
           }
         }
 
-        // ✅ Lesson availability check
         for (const item of order.lessons) {
           const lesson = await lessonsCollection.findOne({
             _id: new ObjectId(item.id),
@@ -117,7 +114,6 @@ async function run() {
           }
         }
 
-        // ✅ Update lesson space
         for (const item of order.lessons) {
           await lessonsCollection.updateOne(
             { _id: new ObjectId(item.id) },
@@ -219,4 +215,3 @@ async function run() {
 }
 
 run().catch(console.dir);
-

@@ -63,64 +63,75 @@ async function run() {
       }
     });
 
-    // POST /orders – processes an order and updates lesson availability
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
-        // Validate required fields
+
+        // ✅ Validate required fields
         if (
           !order.firstName ||
           !order.lastName ||
           !order.phone ||
           !order.method ||
-          !order.lessons ||
           !Array.isArray(order.lessons) ||
           order.lessons.length === 0
         ) {
-          return res.status(400).json({
-            error:
-              "Missing required order fields or lessons. Order must include firstName, lastName, phone, method, and a non-empty lessons array.",
-          });
+          return res.status(400).json({ error: "Missing required fields." });
         }
 
-        // Check each ordered lesson
-        for (const orderItem of order.lessons) {
-          if (!orderItem.id || !orderItem.quantity) {
-            return res
-              .status(400)
-              .json({ error: "Each order item must include id and quantity." });
+        // ✅ Field format validation
+        const nameRegex = /^[A-Za-z]+$/;
+        const phoneRegex = /^[0-9]{7,15}$/;
+        const zipRegex = /^\d{5}$/;
+
+        if (!nameRegex.test(order.firstName.trim())) {
+          return res.status(400).json({ error: "Invalid first name." });
+        }
+
+        if (!nameRegex.test(order.lastName.trim())) {
+          return res.status(400).json({ error: "Invalid last name." });
+        }
+
+        if (!phoneRegex.test(order.phone)) {
+          return res.status(400).json({ error: "Invalid phone number." });
+        }
+
+        if (order.method === "Home Delivery") {
+          if (!order.address || order.address.trim().length === 0) {
+            return res.status(400).json({ error: "Address is required." });
           }
+          if (!zipRegex.test(String(order.zip))) {
+            return res.status(400).json({ error: "Invalid ZIP code." });
+          }
+        }
+
+        // ✅ Lesson availability check
+        for (const item of order.lessons) {
           const lesson = await lessonsCollection.findOne({
-            _id: new ObjectId(orderItem.id),
+            _id: new ObjectId(item.id),
           });
-          if (!lesson) {
-            return res
-              .status(404)
-              .json({ error: `Lesson with id ${orderItem.id} not found.` });
-          }
-          if (lesson.Space < orderItem.quantity) {
+          if (!lesson || lesson.Space < item.quantity) {
             return res.status(400).json({
-              error: `Not enough available slots for lesson "${lesson.LessonName}". Available: ${lesson.Space}`,
+              error: `Not enough space in ${lesson?.LessonName || "lesson"}.`,
             });
           }
         }
 
-        // Update each lesson's "Space"
-        for (const orderItem of order.lessons) {
+        // ✅ Update lesson space
+        for (const item of order.lessons) {
           await lessonsCollection.updateOne(
-            { _id: new ObjectId(orderItem.id) },
-            { $inc: { Space: -orderItem.quantity } }
+            { _id: new ObjectId(item.id) },
+            { $inc: { Space: -item.quantity } }
           );
         }
 
-        // Insert the order
         const result = await ordersCollection.insertOne(order);
         res
           .status(201)
           .json({ message: "Order created", orderId: result.insertedId });
       } catch (error) {
-        console.error("Error creating order:", error);
-        res.status(500).json({ error: "Failed to create order" });
+        console.error("Order error:", error);
+        res.status(500).json({ error: "Internal server error" });
       }
     });
 
@@ -129,10 +140,18 @@ async function run() {
       try {
         const lessonId = req.params.id;
         const updateData = req.body;
+        let updateQuery = {};
+        if (updateData.$inc) updateQuery.$inc = updateData.$inc;
+        if (updateData.$set) updateQuery.$set = updateData.$set;
+        if (!updateQuery.$set && !updateQuery.$inc) {
+          updateQuery.$set = updateData;
+        }
+
         const result = await lessonsCollection.updateOne(
           { _id: new ObjectId(lessonId) },
-          { $set: updateData }
+          updateQuery
         );
+
         if (result.matchedCount === 0) {
           return res.status(404).json({ error: "Lesson not found" });
         }
@@ -200,3 +219,7 @@ async function run() {
 }
 
 run().catch(console.dir);
+
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});

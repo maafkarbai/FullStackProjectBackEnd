@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import { MongoClient, ObjectId } from "mongodb";
 import path from "path";
@@ -63,10 +62,12 @@ async function run() {
       }
     });
 
+    // POST /orders – create a new order
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
 
+        // Validate required fields
         if (
           !order.firstName ||
           !order.lastName ||
@@ -85,15 +86,12 @@ async function run() {
         if (!nameRegex.test(order.firstName.trim())) {
           return res.status(400).json({ error: "Invalid first name." });
         }
-
         if (!nameRegex.test(order.lastName.trim())) {
           return res.status(400).json({ error: "Invalid last name." });
         }
-
         if (!phoneRegex.test(order.phone)) {
           return res.status(400).json({ error: "Invalid phone number." });
         }
-
         if (order.method === "Home Delivery") {
           if (!order.address || order.address.trim().length === 0) {
             return res.status(400).json({ error: "Address is required." });
@@ -103,7 +101,9 @@ async function run() {
           }
         }
 
+        // For each lesson in the order, check for availability, update space, and enrich the order item
         for (const item of order.lessons) {
+          // Expect the client to send an "id" field for the lesson
           const lesson = await lessonsCollection.findOne({
             _id: new ObjectId(item.id),
           });
@@ -112,15 +112,22 @@ async function run() {
               error: `Not enough space in ${lesson?.LessonName || "lesson"}.`,
             });
           }
-        }
 
-        for (const item of order.lessons) {
+          // Decrement the available space in the lessons collection
           await lessonsCollection.updateOne(
             { _id: new ObjectId(item.id) },
             { $inc: { Space: -item.quantity } }
           );
+
+          // Enrich the order item with the lesson's _id and name
+          item.lessonId = lesson._id;
+          item.lessonName = lesson.LessonName;
+
+          // Remove the original "id" field to avoid confusion
+          delete item.id;
         }
 
+        // Insert the order into the orders collection
         const result = await ordersCollection.insertOne(order);
         res
           .status(201)

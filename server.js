@@ -33,7 +33,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/images", (req, res) => {
-  res.status(404).send("Custom error: Image not found.");
+  res.status(404).send("Image not found. Please check the URL.");
 });
 // 3. MongoDB connection
 const uri =

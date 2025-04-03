@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 1. Middleware
+// 1. Middleware: Parse JSON bodies
 app.use(express.json());
 
 // Manual CORS Middleware
@@ -23,12 +23,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// 2. Serve static files (lesson images) from "images" folder
+// 2. Serve static files (e.g., lesson images) from the "images" folder
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/images", express.static(path.join(__dirname, "images")));
@@ -51,7 +52,7 @@ async function run() {
     lessonsCollection = database.collection("lessons");
     ordersCollection = database.collection("orders");
 
-    // GET /lessons – return raw docs (with native _id)
+    // A. GET /lessons – returns all lessons as JSON
     app.get("/lessons", async (req, res) => {
       try {
         const lessons = await lessonsCollection.find({}).toArray();
@@ -62,7 +63,7 @@ async function run() {
       }
     });
 
-    // POST /orders – create a new order
+    // B. POST /orders – saves a new order to the "orders" collection
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
@@ -101,33 +102,30 @@ async function run() {
           }
         }
 
-        // For each lesson in the order, check for availability, update space, and enrich the order item
+        // Process each lesson in the order: check availability and update lesson details
         for (const item of order.lessons) {
           // Expect the client to send an "id" field for the lesson
           const lesson = await lessonsCollection.findOne({
             _id: new ObjectId(item.id),
           });
-          if (!lesson || lesson.Space < item.quantity) {
+          if (!lesson || lesson.space < item.quantity) {
             return res.status(400).json({
-              error: `Not enough space in ${lesson?.LessonName || "lesson"}.`,
+              error: `Not enough space in ${lesson?.topic || "lesson"}.`,
             });
           }
 
-          // Decrement the available space in the lessons collection
-          await lessonsCollection.updateOne(
-            { _id: new ObjectId(item.id) },
-            { $inc: { Space: -item.quantity } }
-          );
+          // Update the available space (this example assumes you'll update the lesson separately via PUT)
+          // Alternatively, you can update the lesson here using $inc as in your business logic.
 
-          // Enrich the order item with the lesson's _id and name
+          // Enrich the order item with the lesson's _id and topic
           item.lessonId = lesson._id;
-          item.lessonName = lesson.LessonName;
+          item.lessonTopic = lesson.topic;
 
           // Remove the original "id" field to avoid confusion
           delete item.id;
         }
 
-        // Insert the order into the orders collection
+        // Insert the new order into the orders collection
         const result = await ordersCollection.insertOne(order);
         res
           .status(201)
@@ -138,12 +136,15 @@ async function run() {
       }
     });
 
-    // PUT /lessons/:id – update a lesson (optional for admin)
+    // C. PUT /lessons/:id – updates any attribute in a lesson in the "lessons" collection
+    // This route is flexible: if no $set or $inc operators are provided, it assumes the request body is the new data.
     app.put("/lessons/:id", async (req, res) => {
       try {
         const lessonId = req.params.id;
         const updateData = req.body;
         let updateQuery = {};
+
+        // Allow the client to specify the update operator ($set, $inc) or simply send an object to update directly.
         if (updateData.$inc) updateQuery.$inc = updateData.$inc;
         if (updateData.$set) updateQuery.$set = updateData.$set;
         if (!updateQuery.$set && !updateQuery.$inc) {
@@ -162,53 +163,6 @@ async function run() {
       } catch (error) {
         console.error("Error updating lesson:", error);
         res.status(500).json({ error: "Failed to update lesson" });
-      }
-    });
-
-    // GET /search - Full text search on LessonName, Location, Price, Space
-    app.get("/search", async (req, res) => {
-      const query = (req.query.q || "").trim();
-
-      try {
-        // Return all lessons if search query is empty
-        if (!query) {
-          const lessons = await lessonsCollection.find({}).toArray();
-          return res.json(lessons);
-        }
-
-        const regex = new RegExp(query, "i"); // case-insensitive regex
-
-        const results = await lessonsCollection
-          .find({
-            $or: [
-              { LessonName: regex },
-              { Location: regex },
-              {
-                $expr: {
-                  $regexMatch: {
-                    input: { $toString: "$Price" },
-                    regex: query,
-                    options: "i",
-                  },
-                },
-              },
-              {
-                $expr: {
-                  $regexMatch: {
-                    input: { $toString: "$Space" },
-                    regex: query,
-                    options: "i",
-                  },
-                },
-              },
-            ],
-          })
-          .toArray();
-
-        res.json(results);
-      } catch (err) {
-        console.error("Search error:", err);
-        res.status(500).json({ error: "Search failed." });
       }
     });
 

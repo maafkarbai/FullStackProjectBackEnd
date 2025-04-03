@@ -6,35 +6,9 @@ import { fileURLToPath } from "url";
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 1. Middleware: Parse JSON bodies
 app.use(express.json());
 
-// Manual CORS Middleware
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
-
-// 2. Serve static files (e.g., lesson images) from the "images" folder
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use("/images", express.static(path.join(__dirname, "images")));
-
-// 3. MongoDB connection
+// MongoDB connection string (update with your credentials if needed)
 const uri =
   process.env.MONGODB_URI ||
   "mongodb+srv://abdulla:Abdulla123@cluster0.h8xjc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -42,6 +16,10 @@ const client = new MongoClient(uri);
 
 let lessonsCollection;
 let ordersCollection;
+
+// Set up __dirname for static assets if needed
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function run() {
   try {
@@ -52,7 +30,7 @@ async function run() {
     lessonsCollection = database.collection("lessons");
     ordersCollection = database.collection("orders");
 
-    // A. GET /lessons – returns all lessons as JSON
+    // A. GET /lessons – dynamically fetches and returns all lessons as JSON
     app.get("/lessons", async (req, res) => {
       try {
         const lessons = await lessonsCollection.find({}).toArray();
@@ -63,7 +41,7 @@ async function run() {
       }
     });
 
-    // B. POST /orders – saves a new order to the "orders" collection
+    // B. POST /orders – directly saves a new order to the "orders" collection
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
@@ -80,29 +58,7 @@ async function run() {
           return res.status(400).json({ error: "Missing required fields." });
         }
 
-        const nameRegex = /^[A-Za-z]+$/;
-        const phoneRegex = /^[0-9]{7,15}$/;
-        const zipRegex = /^\d{5}$/;
-
-        if (!nameRegex.test(order.firstName.trim())) {
-          return res.status(400).json({ error: "Invalid first name." });
-        }
-        if (!nameRegex.test(order.lastName.trim())) {
-          return res.status(400).json({ error: "Invalid last name." });
-        }
-        if (!phoneRegex.test(order.phone)) {
-          return res.status(400).json({ error: "Invalid phone number." });
-        }
-        if (order.method === "Home Delivery") {
-          if (!order.address || order.address.trim().length === 0) {
-            return res.status(400).json({ error: "Address is required." });
-          }
-          if (!zipRegex.test(String(order.zip))) {
-            return res.status(400).json({ error: "Invalid ZIP code." });
-          }
-        }
-
-        // Process each lesson in the order: check availability and update lesson details
+        // Process each lesson in the order
         for (const item of order.lessons) {
           // Expect the client to send an "id" field for the lesson
           const lesson = await lessonsCollection.findOne({
@@ -114,18 +70,12 @@ async function run() {
             });
           }
 
-          // Update the available space (this example assumes you'll update the lesson separately via PUT)
-          // Alternatively, you can update the lesson here using $inc as in your business logic.
-
-          // Enrich the order item with the lesson's _id and topic
+          // Enrich the order item with lesson details and remove the original "id"
           item.lessonId = lesson._id;
           item.lessonTopic = lesson.topic;
-
-          // Remove the original "id" field to avoid confusion
           delete item.id;
         }
 
-        // Insert the new order into the orders collection
         const result = await ordersCollection.insertOne(order);
         res
           .status(201)
@@ -136,15 +86,14 @@ async function run() {
       }
     });
 
-    // C. PUT /lessons/:id – updates any attribute in a lesson in the "lessons" collection
-    // This route is flexible: if no $set or $inc operators are provided, it assumes the request body is the new data.
+    // C. PUT /lessons/:id – updates any attribute of a lesson in the "lessons" collection
     app.put("/lessons/:id", async (req, res) => {
       try {
         const lessonId = req.params.id;
         const updateData = req.body;
         let updateQuery = {};
 
-        // Allow the client to specify the update operator ($set, $inc) or simply send an object to update directly.
+        // Allow specifying $set, $inc, or simply updating with the raw request body
         if (updateData.$inc) updateQuery.$inc = updateData.$inc;
         if (updateData.$set) updateQuery.$set = updateData.$set;
         if (!updateQuery.$set && !updateQuery.$inc) {
@@ -166,7 +115,6 @@ async function run() {
       }
     });
 
-    // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });

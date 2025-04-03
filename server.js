@@ -57,8 +57,8 @@ async function run() {
       res.send(`
     <h1>Welcome to the API</h1>
     <ul>
-      <li><a href="/orders">Orders</a></li>
-      <li><a href="/lessons">Lessons</a></li>
+      <li><a href="/orders">Go to Orders</a></li>
+      <li><a href="/lessons">Go to Lessons</a></li>
     </ul>
   `);
     });

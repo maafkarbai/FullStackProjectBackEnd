@@ -55,7 +55,7 @@ async function run() {
 
     app.get("/", (req, res) => {
       res.send(`
-    <h1>Welcome to the API</h1>
+    <h1>Welcome to the Backend Server</h1>
     <ul>
       <li><a href="/orders">Go to Orders</a></li>
       <li><a href="/lessons">Go to Lessons</a></li>

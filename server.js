@@ -41,6 +41,17 @@ async function run() {
       }
     });
 
+    // NEW: GET /orders – dynamically fetches and returns all orders as JSON
+    app.get("/orders", async (req, res) => {
+      try {
+        const orders = await ordersCollection.find({}).toArray();
+        res.json(orders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ error: "Failed to fetch orders" });
+      }
+    });
+
     // B. POST /orders – directly saves a new order to the "orders" collection
     app.post("/orders", async (req, res) => {
       try {

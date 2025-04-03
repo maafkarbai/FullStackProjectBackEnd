@@ -32,7 +32,9 @@ app.use((req, res, next) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/images", express.static(path.join(__dirname, "images")));
-
+app.use("/images", (req, res) => {
+  res.status(404).send("Custom error: Image not found.");
+});
 // 3. MongoDB connection
 const uri =
   process.env.MONGODB_URI ||
